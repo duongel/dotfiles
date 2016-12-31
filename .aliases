@@ -1,0 +1,7 @@
+# Vagrant
+alias vvu="vagrant up"
+alias vvh="vagrant halt"
+alias vvd="vagrant destroy"
+
+# npm
+alias nni="npm install"
