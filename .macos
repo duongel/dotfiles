@@ -337,12 +337,25 @@ cp init/Default\ (OSX).sublime-keymap ~/Library/Application\ Support/Sublime\ Te
 defaults write com.apple.menuextra.clock DateFormat -string "HH:mm"
 
 ###############################################################################
+# Tower2                                                                      #
+###############################################################################
+defaults write com.fournova.Tower2 NSUserKeyEquivalents -dict-add "Discard All Local Changes..." -string "@\$d"
+defaults write com.fournova.Tower2 NSUserKeyEquivalents -dict-add "Show Previous Tab" -string "@\$←"
+defaults write com.fournova.Tower2 NSUserKeyEquivalents -dict-add "Show Next Tab" -string "@\$→"
+
+###############################################################################
+# Google Chrome                                                               #
+###############################################################################
+defaults write com.google.Chrome NSUserKeyEquivalents -dict-add "Select Previous Tab" -string "@\$←"
+defaults write com.google.Chrome NSUserKeyEquivalents -dict-add "Select Next Tab" -string "@\$→"
+
+###############################################################################
 # Kill affected applications                                                  #
 ###############################################################################
 
 for app in "Activity Monitor" "Address Book" "Calendar" "Contacts" "cfprefsd" \
     "Dock" "Finder" "Google Chrome" "Google Chrome Canary" "Mail" "Messages" \
-    "Opera" "Safari" "SizeUp" "Spectacle" "SystemUIServer" "Terminal" \
+    "Opera" "Safari" "SizeUp" "Spectacle" "SystemUIServer" "Terminal" "Tower" \
     "Transmission" "Twitter" "iCal"; do
     killall "${app}" > /dev/null 2>&1
 done
