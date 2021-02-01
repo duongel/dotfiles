@@ -1,3 +1,7 @@
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
 fpath=(~/.zsh $fpath)
 
 recordSimulator() {
@@ -81,9 +85,11 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+plugins=(git git-flow-avh ng npm)
+
 
 source $ZSH/oh-my-zsh.sh
+ZSH_THEME="philips"
 
 # User configuration
 
@@ -129,14 +135,26 @@ zle -N expand-alias
 bindkey -M main ' ' expand-alias
 
 alias dvag=~/Documents/dvag
-alias -g gs="git status"
 alias cdd="cd .."
 alias -g hh="~/"
+alias -g bbb="cd ~/Documents/beratungsmodule"
+alias -g zzz="cd ~/Documents/zahlen_app"
+alias -g mmm="cd ~/Documents/com.dvag.portos.mobile.app.2.0"
+
+alias -g gd="git pull"
+alias -g gu="git push"
+alias -g gs="git status"
 alias -g gc='git commit -m "'
-alias -g gca='git commit -am "'
+alias -g gca='git add .;git commit -am "'
 alias -g gpp="git push --set-upstream origin $(git_branch)"
+alias -g gcc="git checkout --track"
+alias -g gdev="git switch develop"
+:
+alias -g npmi="nvm use;npm install"
+alias -g ngs="ng serve --host 0.0.0.0"
+alias -g chrome='open -a "Google Chrome" http://localhost:4200'
 
-
+alias -g ggg="| grep "
 
 # prompt customisation
 # setopt PROMPT_SUBST
@@ -145,3 +163,4 @@ alias -g gpp="git push --set-upstream origin $(git_branch)"
 source ~/.git-prompt.sh
 
 RPROMPT="%{$fg[cyan]%}%D{%K:%M:%S} | %D{%Y-%m-%f}%{$reset_color%}"
+export PATH="/usr/local/sbin:$PATH"
