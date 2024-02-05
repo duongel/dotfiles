@@ -34,6 +34,11 @@ defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
 # Disable smart dashes as they’re annoying when typing code
 defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
 
+# Open .txt files and files without extension with Sublime Text by default
+defaults write com.apple.LaunchServices LSHandlers -array-add ' {LSHandlerContentType=public.plain-text;LSHandlerRoleAll=com.sublimetext.4;}'
+defaults write com.apple.LaunchServices LSHandlers -array-add ' {LSHandlerContentType=public.unix-executable;LSHandlerRoleAll=com.sublimetext.4;}'
+defaults write com.apple.LaunchServices LSHandlers -array-add ' {LSHandlerContentType=public.public.data;LSHandlerRoleAll=com.sublimetext.4;}'
+
 ###############################################################################
 # SSD-specific tweaks                                                         #
 ###############################################################################
@@ -52,7 +57,7 @@ defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
 # sudo chflags uchg /private/var/vm/sleepimage
 
 # Disable the sudden motion sensor as it’s not useful for SSDs
-sudo pmset -a sms 0
+# sudo pmset -a sms 0
 
 ###############################################################################
 # Trackpad, mouse, keyboard, Bluetooth accessories, and input                 #
@@ -83,7 +88,7 @@ defaults write com.apple.screensaver askForPassword -int 1
 defaults write com.apple.screensaver askForPasswordDelay -int 0
 
 # Enable HiDPI display modes (requires restart)
-sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool true
+#sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool true
 
 ###############################################################################
 # Finder                                                                      #
@@ -111,7 +116,7 @@ defaults write com.apple.finder QLEnableTextSelection -bool true
 defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
 
 # Disable the warning when changing a file extension
-defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
+#defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
 
 # Avoid creating .DS_Store files on network volumes
 defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
@@ -148,13 +153,13 @@ defaults write com.apple.dock mineffect -string "scale"
 defaults write com.apple.dock persistent-apps -array
 
 # Don’t animate opening applications from the Dock
-defaults write com.apple.dock launchanim -bool false
+#defaults write com.apple.dock launchanim -bool false
 
 # Speed up Mission Control animations
 defaults write com.apple.dock expose-animation-duration -float 0.1
 
 # Don’t show Dashboard as a Space
-defaults write com.apple.dock dashboard-in-overlay -bool true
+#defaults write com.apple.dock dashboard-in-overlay -bool true
 
 # Don’t automatically rearrange Spaces based on most recent use
 defaults write com.apple.dock mru-spaces -bool false
@@ -194,12 +199,12 @@ defaults write com.apple.dock showLaunchpadGestureEnabled -int 0
 # defaults write com.apple.dock wvous-tr-modifier -int 0
 
 # Bottom left screen corner → Mission Control
-defaults write com.apple.dock wvous-bl-corner -int 2
-defaults write com.apple.dock wvous-bl-modifier -int 0
+#defaults write com.apple.dock wvous-bl-corner -int 2
+#defaults write com.apple.dock wvous-bl-modifier -int 0
 
 # Bottom right screen corner → Desktop
-defaults write com.apple.dock wvous-br-corner -int 4
-defaults write com.apple.dock wvous-br-modifier -int 0
+#defaults write com.apple.dock wvous-br-corner -int 4
+#defaults write com.apple.dock wvous-br-modifier -int 0
 
 ###############################################################################
 # Safari & WebKit                                                             #
@@ -324,10 +329,10 @@ defaults write com.apple.messageshelper.MessageController SOInputLineSettings -d
 ###############################################################################
 
 # Install Sublime Text settings
-cp init/Preferences.sublime-settings ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User/
+#cp init/Preferences.sublime-settings ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User/
 
 # Install Sublime Text key bindings
-cp init/Default\ (OSX).sublime-keymap ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User/
+#cp init/Default\ (OSX).sublime-keymap ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User/
 
 ###############################################################################
 # Keep additonal commands separate so diff in future is easy                  #
@@ -339,9 +344,9 @@ defaults write com.apple.menuextra.clock DateFormat -string "HH:mm"
 ###############################################################################
 # Tower2                                                                      #
 ###############################################################################
-defaults write com.fournova.Tower2 NSUserKeyEquivalents -dict-add "Discard All Local Changes..." -string "@\$d"
-defaults write com.fournova.Tower2 NSUserKeyEquivalents -dict-add "Show Previous Tab" -string "@\$←"
-defaults write com.fournova.Tower2 NSUserKeyEquivalents -dict-add "Show Next Tab" -string "@\$→"
+# defaults write com.fournova.Tower2 NSUserKeyEquivalents -dict-add "Discard All Local Changes..." -string "@\$d"
+# defaults write com.fournova.Tower2 NSUserKeyEquivalents -dict-add "Show Previous Tab" -string "@\$←"
+# defaults write com.fournova.Tower2 NSUserKeyEquivalents -dict-add "Show Next Tab" -string "@\$→"
 
 ###############################################################################
 # Google Chrome                                                               #
