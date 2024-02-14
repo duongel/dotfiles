@@ -142,6 +142,10 @@ defaults write com.apple.finder FXInfoPanesExpanded -dict \
     OpenWith -bool true \
     Privileges -bool true
 
+# Next tab, previous tab
+defaults write com.apple.finder NSUserKeyEquivalents -dict-add "Nächsten Tab anzeigen" -string "@~→"
+defaults write com.apple.finder NSUserKeyEquivalents -dict-add "Vorherigen Tab anzeigen" -string "@~←"
+
 ###############################################################################
 # Dock, Dashboard, and hot corners                                            #
 ###############################################################################
@@ -341,18 +345,6 @@ defaults write com.apple.messageshelper.MessageController SOInputLineSettings -d
 # Menu bar: Set date and time format e.g. Sun 11 Aug 16:55
 defaults write com.apple.menuextra.clock DateFormat -string "HH:mm"
 
-###############################################################################
-# Tower2                                                                      #
-###############################################################################
-# defaults write com.fournova.Tower2 NSUserKeyEquivalents -dict-add "Discard All Local Changes..." -string "@\$d"
-# defaults write com.fournova.Tower2 NSUserKeyEquivalents -dict-add "Show Previous Tab" -string "@\$←"
-# defaults write com.fournova.Tower2 NSUserKeyEquivalents -dict-add "Show Next Tab" -string "@\$→"
-
-###############################################################################
-# Google Chrome                                                               #
-###############################################################################
-defaults write com.google.Chrome NSUserKeyEquivalents -dict-add "Select Previous Tab" -string "@\$←"
-defaults write com.google.Chrome NSUserKeyEquivalents -dict-add "Select Next Tab" -string "@\$→"
 
 ###############################################################################
 # Kill affected applications                                                  #
