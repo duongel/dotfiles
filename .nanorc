@@ -1,0 +1,4 @@
+include /opt/homebrew/opt/nano/share/nano/*.nanorc
+set autoindent
+set tabstospaces
+set tabsize 2
