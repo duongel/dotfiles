@@ -13,3 +13,8 @@ brew "kubectl"
 brew "maven"
 brew "nvm"
 brew "ripgrep"
+
+cask "brave-browser"
+cask "maccy"
+cask "sublime-text"
+
