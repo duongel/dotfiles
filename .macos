@@ -14,11 +14,88 @@ set_tab_shortcuts() {
     defaults write "$domain" NSUserKeyEquivalents -dict-add "Select Previous Tab" -string "@$~←"
 }
 
+set_finder_icon_view_settings() {
+    local settings_key="$1"
+    /usr/bin/python3 - "$settings_key" "$HOME/Library/Preferences/com.apple.finder.plist" <<'PY'
+import plistlib
+import sys
+from pathlib import Path
+
+settings_key = sys.argv[1]
+plist_path = Path(sys.argv[2])
+
+if plist_path.exists():
+    with plist_path.open('rb') as fh:
+        try:
+            root = plistlib.load(fh)
+        except Exception:
+            root = {}
+else:
+    root = {}
+
+settings = root.setdefault(settings_key, {})
+icon = settings.setdefault('IconViewSettings', {})
+icon.update({
+    'arrangeBy': 'none',
+    'backgroundColorBlue': 1.0,
+    'backgroundColorGreen': 1.0,
+    'backgroundColorRed': 1.0,
+    'backgroundType': 0,
+    'gridOffsetX': 0,
+    'gridOffsetY': 0,
+    'gridSpacing': 54,
+    'iconSize': 64,
+    'labelOnBottom': True,
+    'showIconPreview': True,
+    'showItemInfo': False,
+    'textSize': 12,
+    'viewOptionsVersion': 1,
+})
+
+with plist_path.open('wb') as fh:
+    plistlib.dump(root, fh)
+PY
+}
+
+install_terminal_profile() {
+    local profile_name="$1"
+    local profile_path="$2"
+    local terminal_plist="$HOME/Library/Preferences/com.apple.Terminal.plist"
+
+    /usr/bin/python3 - "$profile_name" "$profile_path" "$terminal_plist" <<'PY'
+import plistlib
+import sys
+from pathlib import Path
+
+profile_name = sys.argv[1]
+profile_path = Path(sys.argv[2])
+terminal_plist = Path(sys.argv[3])
+
+with profile_path.open('rb') as fh:
+    profile = plistlib.load(fh)
+
+if terminal_plist.exists():
+    with terminal_plist.open('rb') as fh:
+        try:
+            root = plistlib.load(fh)
+        except Exception:
+            root = {}
+else:
+    root = {}
+
+window_settings = root.setdefault('Window Settings', {})
+window_settings[profile_name] = profile
+
+with terminal_plist.open('wb') as fh:
+    plistlib.dump(root, fh)
+PY
+}
+
 # Ask for the administrator password upfront
 sudo -v
 
 # Keep-alive: update existing `sudo` time stamp until `.osx` has finished
-while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done >/dev/null 2>&1 </dev/null &
 
 ###############################################################################
 # General UI/UX                                                               #
@@ -141,54 +218,9 @@ defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
 defaults write com.apple.finder FXRemoveOldTrashItems -bool true
 
 # Keep Finder icon views aligned with the current machine
-defaults write com.apple.finder DesktopViewSettings -dict \
-    IconViewSettings -dict \
-    arrangeBy -string "none" \
-    backgroundColorBlue -float 1 \
-    backgroundColorGreen -float 1 \
-    backgroundColorRed -float 1 \
-    backgroundType -int 0 \
-    gridOffsetX -int 0 \
-    gridOffsetY -int 0 \
-    gridSpacing -int 54 \
-    iconSize -int 64 \
-    labelOnBottom -bool true \
-    showIconPreview -bool true \
-    showItemInfo -bool false \
-    textSize -int 12 \
-    viewOptionsVersion -int 1
-defaults write com.apple.finder FK_StandardViewSettings -dict \
-    IconViewSettings -dict \
-    arrangeBy -string "none" \
-    backgroundColorBlue -float 1 \
-    backgroundColorGreen -float 1 \
-    backgroundColorRed -float 1 \
-    backgroundType -int 0 \
-    gridOffsetX -int 0 \
-    gridOffsetY -int 0 \
-    gridSpacing -int 54 \
-    iconSize -int 64 \
-    labelOnBottom -bool true \
-    showIconPreview -bool true \
-    showItemInfo -bool false \
-    textSize -int 12 \
-    viewOptionsVersion -int 1
-defaults write com.apple.finder StandardViewSettings -dict \
-    IconViewSettings -dict \
-    arrangeBy -string "none" \
-    backgroundColorBlue -float 1 \
-    backgroundColorGreen -float 1 \
-    backgroundColorRed -float 1 \
-    backgroundType -int 0 \
-    gridOffsetX -int 0 \
-    gridOffsetY -int 0 \
-    gridSpacing -int 54 \
-    iconSize -int 64 \
-    labelOnBottom -bool true \
-    showIconPreview -bool true \
-    showItemInfo -bool false \
-    textSize -int 12 \
-    viewOptionsVersion -int 1
+set_finder_icon_view_settings "DesktopViewSettings"
+set_finder_icon_view_settings "FK_StandardViewSettings"
+set_finder_icon_view_settings "StandardViewSettings"
 
 # Disable the warning before emptying the Trash
 # defaults write com.apple.finder WarnOnEmptyTrash -bool false
@@ -299,34 +331,6 @@ defaults write com.apple.dock wvous-br-corner -int 0
 defaults write com.apple.dock wvous-br-modifier -int 0
 
 ###############################################################################
-# Safari & WebKit                                                             #
-###############################################################################
-
-# Privacy: don’t send search queries to Apple
-defaults write com.apple.Safari UniversalSearchEnabled -bool false
-defaults write com.apple.Safari SuppressSearchSuggestions -bool true
-
-# Show the full URL in the address bar (note: this still hides the scheme)
-defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true
-
-# Set Safari’s home page to `about:blank` for faster loading
-defaults write com.apple.Safari HomePage -string "https://www.google.com"
-
-# Prevent Safari from opening ‘safe’ files automatically after downloading
-defaults write com.apple.Safari AutoOpenSafeDownloads -bool false
-
-# Enable Safari’s debug menu
-defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
-
-# Make Safari’s search banners default to Contains instead of Starts With
-defaults write com.apple.Safari FindOnPageMatchesWordStartsOnly -bool false
-
-# Enable the Develop menu and the Web Inspector in Safari
-defaults write com.apple.Safari IncludeDevelopMenu -bool true
-defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
-defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
-
-###############################################################################
 # Mail                                                                        #
 ###############################################################################
 
@@ -345,10 +349,9 @@ defaults write com.apple.Terminal SecureKeyboardEntry -bool false
 cp "$DOTFILES_DIR"/fonts/MesloLGS\ NF\ *.ttf ~/Library/Fonts/
 
 # Keep the preferred Terminal profile consistent
+install_terminal_profile "Pro" "$DOTFILES_DIR/init/Pro.terminal"
 defaults write com.apple.terminal "Startup Window Settings" -string "Pro"
 defaults write com.apple.terminal "Default Window Settings" -string "Pro"
-open "$DOTFILES_DIR/init/Pro.terminal"
-osascript -e 'tell application "Terminal" to set default settings to settings set "Pro"'
 
 ###############################################################################
 # Time Machine                                                                #
@@ -400,14 +403,4 @@ defaults write com.apple.menuextra.clock ShowDayOfWeek -bool true
 defaults write com.apple.menuextra.clock Show24Hour -bool true
 
 
-###############################################################################
-# Kill affected applications                                                  #
-###############################################################################
-
-for app in "Activity Monitor" "Brave Browser" "Calendar" "Contacts" "cfprefsd" \
-    "Dock" "Finder" "Mail" "Messages" \
-    "Opera" "Safari" "SizeUp" "Spectacle" "SystemUIServer" "Terminal" "Tower" \
-    "Transmission"; do
-    killall "${app}" > /dev/null 2>&1
-done
-echo "Done. Note that LaunchServices changes usually require a logout or restart to take effect."
+echo "macOS defaults applied."
