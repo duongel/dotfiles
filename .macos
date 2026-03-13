@@ -104,6 +104,9 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done >/dev/null 2>&
 # Disable the sound effects on boot
 sudo nvram SystemAudioVolume=%00
 
+# Play feedback sound when volume is changed
+defaults write NSGlobalDomain com.apple.sound.beep.feedback -bool true
+
 # Set highlight color to green
 #defaults write NSGlobalDomain AppleHighlightColor -string "0.764700 0.976500 0.568600"
 
