@@ -57,6 +57,40 @@ with plist_path.open('wb') as fh:
 PY
 }
 
+set_finder_list_view_settings() {
+    local settings_key="$1"
+    /usr/bin/python3 - "$settings_key" "$HOME/Library/Preferences/com.apple.finder.plist" <<'PY'
+import plistlib
+import sys
+from pathlib import Path
+
+settings_key = sys.argv[1]
+plist_path = Path(sys.argv[2])
+
+if plist_path.exists():
+    with plist_path.open('rb') as fh:
+        try:
+            root = plistlib.load(fh)
+        except Exception:
+            root = {}
+else:
+    root = {}
+
+settings = root.setdefault(settings_key, {})
+lv = settings.setdefault('ListViewSettings', {})
+lv.update({
+    'iconSize': 20,
+    'textSize': 16,
+    'showIconPreview': True,
+    'useRelativeDates': True,
+    'calculateAllSizes': False,
+})
+
+with plist_path.open('wb') as fh:
+    plistlib.dump(root, fh)
+PY
+}
+
 install_terminal_profile() {
     local profile_name="$1"
     local profile_path="$2"
@@ -91,11 +125,12 @@ with terminal_plist.open('wb') as fh:
 PY
 }
 
-# Ask for the administrator password upfront
-sudo -v
-
-# Keep-alive: update existing `sudo` time stamp until `.osx` has finished
-while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done >/dev/null 2>&1 </dev/null &
+# Reuse existing sudo credentials (e.g. from bootstrap.sh);
+# only prompt when running this script standalone.
+if ! sudo -n true 2>/dev/null; then
+  sudo -v
+  (while kill -0 "$$" 2>/dev/null; do sudo -n true; sleep 50; done) &
+fi
 
 ###############################################################################
 # General UI/UX                                                               #
@@ -228,6 +263,10 @@ defaults write com.apple.finder FXRemoveOldTrashItems -bool true
 set_finder_icon_view_settings "DesktopViewSettings"
 set_finder_icon_view_settings "FK_StandardViewSettings"
 set_finder_icon_view_settings "StandardViewSettings"
+
+# Finder list view: large icons, text size 16
+set_finder_list_view_settings "FK_StandardViewSettings"
+set_finder_list_view_settings "StandardViewSettings"
 
 # Disable the warning before emptying the Trash
 # defaults write com.apple.finder WarnOnEmptyTrash -bool false

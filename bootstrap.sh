@@ -246,6 +246,25 @@ main() {
   echo "==== bootstrap finished $(date '+%Y-%m-%d %H:%M:%S') ===="
 }
 
+acquire_sudo() {
+  printf '%s\n' "Administrator privileges are required for some steps." \
+                 "You may be prompted for your password."
+  if ! sudo -v 2>&1; then
+    echo "Failed to obtain sudo access." >&2
+    exit 1
+  fi
+  # Keep sudo timestamp refreshed in background until this script exits
+  (
+    while kill -0 "$$" 2>/dev/null; do
+      sudo -n true 2>/dev/null
+      sleep 50
+    done
+  ) &
+  SUDO_KEEPALIVE_PID=$!
+  trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT
+}
+
 parse_args "$@"
+acquire_sudo
 main 2>&1 | write_log_with_timestamps
 exit "${PIPESTATUS[0]}"
