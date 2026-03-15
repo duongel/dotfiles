@@ -15,6 +15,6 @@ brew "nvm"
 brew "ripgrep"
 
 cask "brave-browser"
+cask "keyboard-clean-tool"
 cask "maccy"
 cask "sublime-text"
-
