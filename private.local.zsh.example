@@ -1,0 +1,72 @@
+# Copy relevant parts of this template into ~/.config/zsh/private.local.zsh
+# or let bootstrap.sh import an existing private zsh file into that path.
+
+# Project shortcuts
+# alias 333="cd ~/Documents/360-grad-app"
+# alias ddd="cd ~/Documents/dvag"
+# alias fff="cd ~/Documents/web-vp-testing-commons"
+# alias rrr="cd ~/Documents/tarifrechner-referenzimplementierung-backend"
+# alias vvv="cd ~/Documents/vp-digital-abschluss-frontend"
+
+# SSH shortcuts
+# alias sshh="ssh user@192.168.1.13"
+# alias ssha="ssh user@192.168.1.12"
+# alias sshm="ssh user@192.168.1.11"
+# alias sshd="ssh user@192.168.1.11"
+# alias sshr="ssh user@192.168.1.10"
+
+# Tooling shortcuts
+# alias cstart='colima start --arch aarch64 --vm-type=vz --vz-rosetta --cpu 6 --memory 12 --disk 64 --network-address'
+# alias ccc='cd ~/Documents/vp-digital-abschluss-frontend/docker && colima start --arch aarch64 --vm-type=vz --vz-rosetta --cpu 6 --memory 12 --disk 64 --network-address && tilt up'
+# alias mmm="cd ~/Documents/scripts && ./mouse.sh"
+# alias ggg="cd ~/Documents/scripts && ./good_morning.sh"
+# alias update-firewall-ip="cd ~/Documents/scripts && ./firewall-ip-update-int.sh"
+
+# AI mode switch
+# alias a="~/Documents/scripts/aimode.sh start"
+# alias d="~/Documents/scripts/aimode.sh stop"
+
+# Optional keybinding expansions
+# expand_private_shortcuts() {
+#   if [[ "$LBUFFER" == "ccc" ]]; then
+#     LBUFFER="${LBUFFER%ccc}cd ~/Documents/vp-digital-abschluss-frontend/docker && colima start --arch aarch64 --vm-type=vz --vz-rosetta --cpu 6 --memory 12 --disk 64 && tilt up"
+#     return
+#   fi
+#
+#   if [[ "$LBUFFER" == *'cstart' ]]; then
+#     LBUFFER="${LBUFFER%cstart}colima start --arch aarch64 --vm-type=vz --vz-rosetta --cpu 6 --memory 12 --disk 64 --network-address"
+#     return
+#   fi
+#
+#   if [[ "$LBUFFER" == *'rebuild-setup' ]]; then
+#     LBUFFER="${LBUFFER%rebuild-setup}cd ~/Documents/vp-digital-abschluss-frontend/docker && tilt down && docker volume prune -af && cd ../backend && mvn clean package -T 2.0C && cd ../docker && tilt up"
+#     return
+#   fi
+#
+#   zle self-insert
+# }
+#
+# zle -N self-insert expand_private_shortcuts
+
+# Optional per-project environment hooks
+# _DEVTOOLS_PROJECT="$HOME/Documents/vp-digital-abschluss-frontend"
+# _DEVTOOLS_ACTIVATE="$HOME/Documents/vp-digital-abschluss-frontend-devtools/activate.sh"
+#
+# _auto_devtools() {
+#   case "$PWD" in
+#     ${_DEVTOOLS_PROJECT}|${_DEVTOOLS_PROJECT}/*)
+#       if [[ -z "${_DEVTOOLS_ORIGINAL_PATH:-}" && -f "${_DEVTOOLS_ACTIVATE}" ]]; then
+#         source "${_DEVTOOLS_ACTIVATE}"
+#       fi
+#       ;;
+#     *)
+#       if typeset -f deactivate-devtools &>/dev/null; then
+#         deactivate-devtools
+#       fi
+#       ;;
+#   esac
+# }
+#
+# autoload -Uz add-zsh-hook
+# add-zsh-hook chpwd _auto_devtools
+# _auto_devtools

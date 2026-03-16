@@ -13,6 +13,7 @@ XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 ZSH_CONFIG_DIR="$XDG_CONFIG_HOME/zsh"
 GIT_CONFIG_DIR="$XDG_CONFIG_HOME/git"
 LOCAL_SHARE_BIN="$HOME/.local/bin"
+PRIVATE_ZSH_FILE="$ZSH_CONFIG_DIR/private.local.zsh"
 
 mkdir -p "$LOG_DIR"
 touch "$LOG_FILE"
@@ -195,6 +196,55 @@ apply_macos_settings() {
   bash "$REPO_DIR/.macos"
 }
 
+import_private_zsh_config() {
+  local source_path
+  local resolved_source
+  local temp_file
+
+  if [[ ! -t 0 ]]; then
+    echo "Skipping private zsh config import because no interactive terminal is attached."
+    return
+  fi
+
+  mkdir -p "$ZSH_CONFIG_DIR"
+
+  if [[ -f "$PRIVATE_ZSH_FILE" ]]; then
+    echo "Private zsh config already exists at $PRIVATE_ZSH_FILE."
+    return
+  fi
+
+  printf "Optional private zsh config path (leave empty to skip): "
+  IFS= read -r source_path
+
+  if [[ -z "$source_path" ]]; then
+    echo "Skipped private zsh config import."
+    return
+  fi
+
+  if [[ "$source_path" == ~* ]]; then
+    eval "resolved_source=\"$source_path\""
+  else
+    resolved_source="$source_path"
+  fi
+
+  if [[ ! -f "$resolved_source" ]]; then
+    echo "Private zsh config not found: $resolved_source" >&2
+    return
+  fi
+
+  temp_file="$(mktemp)"
+  {
+    echo "# Imported by bootstrap.sh on $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "# Source: $resolved_source"
+    printf '\n'
+    cat "$resolved_source"
+    printf '\n'
+  } > "$temp_file"
+  mv "$temp_file" "$PRIVATE_ZSH_FILE"
+
+  echo "Imported private zsh config to $PRIVATE_ZSH_FILE."
+}
+
 restart_affected_apps() {
   if [[ "$RESTART_APPS_AFTER_BOOTSTRAP" -ne 1 ]]; then
     echo "Skipped restarting apps. Re-run with --restart-apps if you want affected apps relaunched automatically."
@@ -239,6 +289,7 @@ main() {
   run_step "linking nvm files" link_homebrew_nvm_files
   run_step "creating xdg symlinks" create_xdg_symlinks
   run_step "setting zsh as the default shell" set_zsh_as_default_shell
+  run_step "importing private zsh config" import_private_zsh_config
   run_step "applying macos settings" apply_macos_settings
 
   restart_affected_apps
