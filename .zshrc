@@ -19,6 +19,20 @@ export LANG="en_GB.UTF-8"
 export EDITOR="nano"
 export VISUAL="nano"
 
+# nvm: lazy load, damit zsh-Start schnell bleibt
+export NVM_DIR="$XDG_CONFIG_HOME/nvm"
+
+_lazy_nvm() {
+  unset -f nvm node npm npx
+  [ -s "$(brew --prefix nvm)/nvm.sh" ] && . "$(brew --prefix nvm)/nvm.sh"
+  nvm "$@"
+}
+
+nvm() { _lazy_nvm "$@"; }
+node() { _lazy_nvm node "$@"; }
+npm()  { _lazy_nvm npm  "$@"; }
+npx()  { _lazy_nvm npx  "$@"; }
+
 # Tool and shell configuration
 export ZSH="$XDG_DATA_HOME/oh-my-zsh"
 export DOCKER_HOST="unix://$XDG_CONFIG_HOME/colima/default/docker.sock"
@@ -63,6 +77,7 @@ alias gu="git push"
 alias ls="eza"
 alias npmi="npm install"
 alias playwright-local-ui="npx playwright test --project local --ui"
+alias kk="k9s"
 
 # Global shell shortcuts
 alias -g hh="~/"
