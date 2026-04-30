@@ -140,6 +140,13 @@ desired = {
     'font-size': '18',
     'macos-option-as-alt': 'left',
 }
+desired_keybinds = {
+    'super+c': r'text:\x1b[99;5u',
+    'shift+arrow_left': r'text:\x1b[1;2D',
+    'shift+arrow_right': r'text:\x1b[1;2C',
+    'alt+shift+arrow_left': r'text:\x1b[1;4D',
+    'alt+shift+arrow_right': r'text:\x1b[1;4C',
+}
 
 if config_path.exists():
     lines = config_path.read_text().splitlines()
@@ -147,6 +154,7 @@ else:
     lines = []
 
 seen = set()
+seen_keybinds = set()
 updated = []
 for line in lines:
     stripped = line.strip()
@@ -154,6 +162,13 @@ for line in lines:
     if key in desired:
         updated.append(f'{key} = {desired[key]}')
         seen.add(key)
+    elif key == 'keybind':
+        trigger = stripped.split('=', 1)[1].split('=', 1)[0].strip() if stripped.count('=') >= 2 else None
+        if trigger in desired_keybinds:
+            updated.append(f'keybind = {trigger}={desired_keybinds[trigger]}')
+            seen_keybinds.add(trigger)
+        else:
+            updated.append(line)
     else:
         updated.append(line)
 
@@ -163,6 +178,10 @@ if updated and updated[-1] != '':
 for key, value in desired.items():
     if key not in seen:
         updated.append(f'{key} = {value}')
+
+for trigger, action in desired_keybinds.items():
+    if trigger not in seen_keybinds:
+        updated.append(f'keybind = {trigger}={action}')
 
 config_path.write_text('\n'.join(updated) + '\n')
 PY

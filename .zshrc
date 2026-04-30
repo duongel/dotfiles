@@ -101,9 +101,88 @@ bindkey ' ' git-commit-shortcuts
 [ -f "$XDG_CONFIG_HOME/zsh/.fzf.zsh" ] && source "$XDG_CONFIG_HOME/zsh/.fzf.zsh"
 bindkey '^ ' autosuggest-accept
 
+# Keyboard-only prompt selection in terminals such as Ghostty.
+_select_region_start() {
+  if (( ! REGION_ACTIVE )); then
+    MARK=$CURSOR
+    REGION_ACTIVE=1
+  fi
+}
+
+_select_backward_char() { _select_region_start; zle backward-char; }
+_select_forward_char() { _select_region_start; zle forward-char; }
+_select_backward_word() { _select_region_start; zle backward-word; }
+_select_forward_word() { _select_region_start; zle forward-word; }
+_move_backward_char() { REGION_ACTIVE=0; zle backward-char; }
+_move_forward_char() { REGION_ACTIVE=0; zle forward-char; }
+_move_backward_word() { REGION_ACTIVE=0; zle backward-word; }
+_move_forward_word() { REGION_ACTIVE=0; zle forward-word; }
+_copy_region_or_interrupt() {
+  if (( REGION_ACTIVE )); then
+    local start end selected
+    if (( MARK < CURSOR )); then
+      start=$MARK
+      end=$CURSOR
+    else
+      start=$CURSOR
+      end=$MARK
+    fi
+    selected=${BUFFER:$start:$(( end - start ))}
+    print -rn -- "$selected" | pbcopy
+    REGION_ACTIVE=0
+    zle reset-prompt
+  else
+    zle send-break
+  fi
+}
+
+zle -N select-backward-char _select_backward_char
+zle -N select-forward-char _select_forward_char
+zle -N select-backward-word _select_backward_word
+zle -N select-forward-word _select_forward_word
+zle -N move-backward-char _move_backward_char
+zle -N move-forward-char _move_forward_char
+zle -N move-backward-word _move_backward_word
+zle -N move-forward-word _move_forward_word
+zle -N copy-region-or-interrupt _copy_region_or_interrupt
+
+bindkey $'\e[1;2D' select-backward-char
+bindkey $'\e[1;2C' select-forward-char
+bindkey $'\e[1;4D' select-backward-word
+bindkey $'\e[1;4C' select-forward-word
+bindkey $'\e[D' move-backward-char
+bindkey $'\e[C' move-forward-char
+bindkey $'\eOD' move-backward-char
+bindkey $'\eOC' move-forward-char
+bindkey "${terminfo[kcub1]}" move-backward-char
+bindkey "${terminfo[kcuf1]}" move-forward-char
+bindkey $'\eb' move-backward-word
+bindkey $'\ef' move-forward-word
+bindkey $'\e[99;5u' copy-region-or-interrupt
+
 # To customize prompt, run `p10k configure` or edit ~/.config/zsh/.p10k.zsh.
 [[ ! -f "$XDG_CONFIG_HOME/zsh/.p10k.zsh" ]] || source "$XDG_CONFIG_HOME/zsh/.p10k.zsh"
 
 # Load machine-specific or private overrides after shared defaults so they can
 # add aliases, hooks, and function overrides without forking this public file.
 [ -f "$XDG_CONFIG_HOME/zsh/private.local.zsh" ] && source "$XDG_CONFIG_HOME/zsh/private.local.zsh"
+
+# BEGIN vp-digital-abschluss-frontend-devtools
+_DEVTOOLS_PROJECT_DIR="${HOME}/Documents/vp-digital-abschluss-frontend"
+_DEVTOOLS_ACTIVATE="${HOME}/Documents/vp-digital-abschluss-frontend-devtools/activate.sh"
+
+_devtools_chpwd() {
+  if [[ "${PWD}" == "${_DEVTOOLS_PROJECT_DIR}" ||         "${PWD}" == "${_DEVTOOLS_PROJECT_DIR}/"* ]]; then
+    if [[ -z "${_DEVTOOLS_ORIGINAL_PATH:-}" && -f "${_DEVTOOLS_ACTIVATE}" ]]; then
+      source "${_DEVTOOLS_ACTIVATE}"
+    fi
+  else
+    if [[ -n "${_DEVTOOLS_ORIGINAL_PATH:-}" ]]; then
+      deactivate-devtools
+    fi
+  fi
+}
+
+autoload -U add-zsh-hook
+add-zsh-hook chpwd _devtools_chpwd
+# END vp-digital-abschluss-frontend-devtools
