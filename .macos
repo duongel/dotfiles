@@ -125,6 +125,49 @@ with terminal_plist.open('wb') as fh:
 PY
 }
 
+configure_ghostty() {
+    local ghostty_config_dir="$HOME/Library/Application Support/com.mitchellh.ghostty"
+    local ghostty_config="$ghostty_config_dir/config.ghostty"
+
+    mkdir -p "$ghostty_config_dir"
+
+    /usr/bin/python3 - "$ghostty_config" <<'PY'
+import sys
+from pathlib import Path
+
+config_path = Path(sys.argv[1])
+desired = {
+    'font-size': '18',
+    'macos-option-as-alt': 'left',
+}
+
+if config_path.exists():
+    lines = config_path.read_text().splitlines()
+else:
+    lines = []
+
+seen = set()
+updated = []
+for line in lines:
+    stripped = line.strip()
+    key = stripped.split('=', 1)[0].strip() if '=' in stripped else None
+    if key in desired:
+        updated.append(f'{key} = {desired[key]}')
+        seen.add(key)
+    else:
+        updated.append(line)
+
+if updated and updated[-1] != '':
+    updated.append('')
+
+for key, value in desired.items():
+    if key not in seen:
+        updated.append(f'{key} = {value}')
+
+config_path.write_text('\n'.join(updated) + '\n')
+PY
+}
+
 # Reuse existing sudo credentials (e.g. from bootstrap.sh);
 # only prompt when running this script standalone.
 if ! sudo -n true 2>/dev/null; then
@@ -398,6 +441,9 @@ cp "$DOTFILES_DIR"/fonts/MesloLGS\ NF\ *.ttf ~/Library/Fonts/
 install_terminal_profile "Pro" "$DOTFILES_DIR/init/Pro.terminal"
 defaults write com.apple.terminal "Startup Window Settings" -string "Pro"
 defaults write com.apple.terminal "Default Window Settings" -string "Pro"
+
+# Keep Ghostty settings consistent
+configure_ghostty
 
 ###############################################################################
 # Time Machine                                                                #
