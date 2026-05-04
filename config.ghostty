@@ -1,0 +1,8 @@
+font-size = 18
+term = xterm-256color
+macos-option-as-alt = left
+
+keybind = shift+arrow_left=text:\x1b[1;2D
+keybind = shift+arrow_right=text:\x1b[1;2C
+keybind = alt+shift+arrow_left=text:\x1b[1;4D
+keybind = alt+shift+arrow_right=text:\x1b[1;4C

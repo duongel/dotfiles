@@ -128,63 +128,22 @@ PY
 configure_ghostty() {
     local ghostty_config_dir="$HOME/Library/Application Support/com.mitchellh.ghostty"
     local ghostty_config="$ghostty_config_dir/config.ghostty"
+    local repo_ghostty_config="$DOTFILES_DIR/config.ghostty"
+    local backup_path
 
     mkdir -p "$ghostty_config_dir"
 
-    /usr/bin/python3 - "$ghostty_config" <<'PY'
-import sys
-from pathlib import Path
+    if [[ -e "$ghostty_config" || -L "$ghostty_config" ]]; then
+        if [[ "$(readlink "$ghostty_config" 2>/dev/null || true)" != "$repo_ghostty_config" ]]; then
+            backup_path="$ghostty_config.backup-before-dotfiles-symlink"
+            if [[ -e "$backup_path" || -L "$backup_path" ]]; then
+                backup_path="$backup_path.$(date +%Y%m%d%H%M%S)"
+            fi
+            mv "$ghostty_config" "$backup_path"
+        fi
+    fi
 
-config_path = Path(sys.argv[1])
-desired = {
-    'font-size': '18',
-    'macos-option-as-alt': 'left',
-}
-desired_keybinds = {
-    'super+c': r'text:\x1b[99;5u',
-    'shift+arrow_left': r'text:\x1b[1;2D',
-    'shift+arrow_right': r'text:\x1b[1;2C',
-    'alt+shift+arrow_left': r'text:\x1b[1;4D',
-    'alt+shift+arrow_right': r'text:\x1b[1;4C',
-}
-
-if config_path.exists():
-    lines = config_path.read_text().splitlines()
-else:
-    lines = []
-
-seen = set()
-seen_keybinds = set()
-updated = []
-for line in lines:
-    stripped = line.strip()
-    key = stripped.split('=', 1)[0].strip() if '=' in stripped else None
-    if key in desired:
-        updated.append(f'{key} = {desired[key]}')
-        seen.add(key)
-    elif key == 'keybind':
-        trigger = stripped.split('=', 1)[1].split('=', 1)[0].strip() if stripped.count('=') >= 2 else None
-        if trigger in desired_keybinds:
-            updated.append(f'keybind = {trigger}={desired_keybinds[trigger]}')
-            seen_keybinds.add(trigger)
-        else:
-            updated.append(line)
-    else:
-        updated.append(line)
-
-if updated and updated[-1] != '':
-    updated.append('')
-
-for key, value in desired.items():
-    if key not in seen:
-        updated.append(f'{key} = {value}')
-
-for trigger, action in desired_keybinds.items():
-    if trigger not in seen_keybinds:
-        updated.append(f'keybind = {trigger}={action}')
-
-config_path.write_text('\n'.join(updated) + '\n')
-PY
+    ln -sfn "$repo_ghostty_config" "$ghostty_config"
 }
 
 # Reuse existing sudo credentials (e.g. from bootstrap.sh);
