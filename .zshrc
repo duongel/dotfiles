@@ -70,7 +70,7 @@ alias kk="k9s"
 
 # Git shortcuts
 alias gd="git pull"
-alias glog='git log --oneline --format="$(tput setaf 2)%h$(tput sgr0) $(tput setaf 3)%ad$(tput sgr0) $(tput setaf 4)%an$(tput sgr0) $(tput setaf 5)%d$(tput sgr0) %s" --date=format:"%Y-%m-%d %H:%M:%S"'
+alias glog='git log -n 5 --oneline --format="$(tput setaf 2)%h$(tput sgr0) $(tput setaf 3)%ad$(tput sgr0) $(tput setaf 4)%an$(tput sgr0) $(tput setaf 5)%d$(tput sgr0) %s" --date=format:"%Y-%m-%d %H:%M:%S"'
 alias gs="git status"
 alias gu="git push"
 
@@ -151,3 +151,5 @@ _devtools_chpwd() {
 autoload -U add-zsh-hook
 add-zsh-hook chpwd _devtools_chpwd
 # END vp-digital-abschluss-frontend-devtools
+
+. "$HOME/.local/share/../bin/env"
