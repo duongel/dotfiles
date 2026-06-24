@@ -3,7 +3,7 @@
 On a new Mac:
 
 ```sh
-git clone <repo-url> ~/Documents/dotfiles
+git clone https://github.com/duongel/dotfiles.git ~/Documents/dotfiles
 cd ~/Documents/dotfiles
 ./bootstrap.sh
 ```
