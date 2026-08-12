@@ -323,7 +323,7 @@ set_tab_shortcuts com.sublimetext.4
 # Change minimize/maximize window effect
 defaults write com.apple.dock mineffect -string "scale"
 
-# Wipe all (default) app icons from the Dock
+# Wipe all app icons from the Dock, so it starts empty and apps can be added manually
 defaults write com.apple.dock persistent-apps -array
 
 # Don’t animate opening applications from the Dock
@@ -350,22 +350,6 @@ defaults write com.apple.dock showLaunchpadGestureEnabled -int 0
 
 # Enable App Expose gesture
 defaults write com.apple.dock showAppExposeGestureEnabled -int 1
-
-# Add Downloads as a stack on the right side of the Dock
-defaults write com.apple.dock persistent-others -array-add '{
-  "tile-data" = {
-    arrangement = 2;
-    "file-data" = {
-      "_CFURLString" = "file://${HOME}/Downloads/";
-      "_CFURLStringType" = 15;
-    };
-    "file-label" = "Downloads";
-    displayas = 0;
-    preferreditemsize = "-1";
-    showas = 1;
-  };
-  "tile-type" = "directory-tile";
-}'
 
 # Hot corners
 # Possible values:
@@ -396,6 +380,10 @@ defaults write com.apple.dock wvous-bl-modifier -int 0
 # Bottom right screen corner → disabled
 defaults write com.apple.dock wvous-br-corner -int 0
 defaults write com.apple.dock wvous-br-modifier -int 0
+
+# Restart the Dock right away. A running Dock keeps its tiles in memory and writes
+# them back to the plist later, which would silently undo the settings above.
+killall Dock > /dev/null 2>&1 || true
 
 ###############################################################################
 # Mail                                                                        #
