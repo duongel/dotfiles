@@ -454,6 +454,94 @@ import_private_zsh_config() {
   echo "Imported private zsh config to $PRIVATE_ZSH_FILE."
 }
 
+read_bettertouchtool_preset_name() {
+  /usr/bin/python3 -c '
+import json, sys
+with open(sys.argv[1]) as preset_file:
+    print(json.load(preset_file).get("BTTPresetName", ""))
+' "$1" 2>/dev/null
+}
+
+bettertouchtool_knows_preset() {
+  local preset_name="$1"
+
+  [[ -n "$preset_name" ]] || return 1
+  osascript -e 'on run {presetName}' \
+            -e 'tell application "BetterTouchTool" to get_preset_details presetName' \
+            -e 'end run' "$preset_name" 2>/dev/null | grep -q '"name"'
+}
+
+start_bettertouchtool() {
+  local waited=0
+
+  if ! pgrep -x "BetterTouchTool" > /dev/null 2>&1; then
+    echo "Launching BetterTouchTool."
+    open -g -a "BetterTouchTool" || return 1
+  fi
+
+  while [[ "$waited" -lt 30 ]]; do
+    if pgrep -x "BetterTouchTool" > /dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+
+  return 1
+}
+
+import_bettertouchtool_preset() {
+  local preset="$REPO_DIR/init/BetterTouchTool/default.bttpreset"
+  local marker="$DOTFILES_CONFIG_DIR/bettertouchtool-preset"
+  local preset_checksum
+  local preset_name
+
+  if [[ ! -f "$preset" ]]; then
+    echo "No BetterTouchTool preset in the repository. Skipping."
+    return
+  fi
+
+  if [[ ! -d "/Applications/BetterTouchTool.app" ]]; then
+    echo "BetterTouchTool is not installed. Skipping preset import."
+    return
+  fi
+
+  preset_checksum="$(shasum -a 256 "$preset" | awk '{print $1}')"
+  if [[ "$(read_stored_choice "$marker")" == "$preset_checksum" ]]; then
+    echo "BetterTouchTool preset already imported."
+    return
+  fi
+
+  if [[ "$(ask_yes_no "Import $preset into BetterTouchTool?" yes)" != "yes" ]]; then
+    echo "Skipped BetterTouchTool preset import."
+    return
+  fi
+
+  if ! start_bettertouchtool; then
+    echo "BetterTouchTool did not start. Skipping preset import."
+    return
+  fi
+
+  # BetterTouchTool only answers scripting requests once it finished launching.
+  sleep 3
+
+  preset_name="$(read_bettertouchtool_preset_name "$preset")"
+
+  osascript -e 'on run {presetPath}' \
+            -e 'tell application "BetterTouchTool" to import_preset presetPath' \
+            -e 'end run' "$preset" > /dev/null 2>&1 || true
+
+  if bettertouchtool_knows_preset "$preset_name"; then
+    mkdir -p "$DOTFILES_CONFIG_DIR"
+    echo "$preset_checksum" > "$marker"
+    echo "Imported preset '$preset_name' into BetterTouchTool."
+  else
+    echo "Scripted import did not work (BetterTouchTool may need automation permission)."
+    echo "Opening the preset in BetterTouchTool instead. Confirm the import in its dialog."
+    open -a "BetterTouchTool" "$preset"
+  fi
+}
+
 restart_affected_apps() {
   if [[ "$RESTART_APPS_AFTER_BOOTSTRAP" -ne 1 ]]; then
     echo "Skipped restarting apps. Re-run with --restart-apps if you want affected apps relaunched automatically."
@@ -514,6 +602,7 @@ main() {
   run_step "recording bootstrap choices" persist_choices
   run_step "setting zsh as the default shell" set_zsh_as_default_shell
   run_step "importing private zsh config" import_private_zsh_config
+  run_step "importing the bettertouchtool preset" import_bettertouchtool_preset
   run_step "applying macos settings" apply_macos_settings
 
   restart_affected_apps

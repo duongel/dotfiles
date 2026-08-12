@@ -39,6 +39,12 @@ The choice can be changed later by re-running `bootstrap.sh`, by editing `~/.con
 
 Machines set up before work tooling became optional keep working after a `git pull`: when `~/.config/dotfiles/work` is missing, `.zshrc` enables the work config as soon as `mvn`, `az`, or an nvm directory is present.
 
+## App configuration
+
+`init/BetterTouchTool/default.bttpreset` is imported during `bootstrap.sh` (after the cask is installed). The step asks first, then launches BetterTouchTool and imports the preset through its AppleScript interface (`import_preset`), so no manual confirmation is needed. Terminal (or whichever app runs the script) needs automation permission for BetterTouchTool; macOS asks for it on the first run. If scripting is unavailable, the preset is opened in BetterTouchTool instead and has to be confirmed in its dialog. The preset's checksum is stored in `~/.config/dotfiles/bettertouchtool-preset` after a successful import, so re-runs do nothing until the preset in the repository actually changes.
+
+The other directories under `init/` (Sublime Text, terminal profiles) are still imported manually.
+
 ## Re-running
 
 `bootstrap.sh` is idempotent: with the same answers a second run changes nothing. Brew bundles are checked before installing, clones and symlinks are skipped when already correct (no new `.bak` files), the login shell is only changed when it actually differs, and an existing `~/.config/zsh/private.local.zsh` is never overwritten. `.macos` re-applies its `defaults` settings on every run, which converges to the same state. Only changing an answer causes work: switching from `linked` to `copied` (or back) replaces the file and backs the previous one up.
