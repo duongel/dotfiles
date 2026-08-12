@@ -1,0 +1,3 @@
+brew "azure-cli"
+brew "maven"
+brew "nvm"

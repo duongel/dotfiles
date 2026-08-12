@@ -20,19 +20,24 @@ export LANG="en_GB.UTF-8"
 export EDITOR="nano"
 export VISUAL="nano"
 
-# nvm: lazy load, damit zsh-Start schnell bleibt
-export NVM_DIR="$XDG_CONFIG_HOME/nvm"
+# Repository that owns this file, resolved through the symlink in $ZDOTDIR.
+DOTFILES_DIR="${${(%):-%x}:A:h}"
 
-_lazy_nvm() {
-  unset -f nvm node npm npx
-  [ -s "$(brew --prefix nvm)/nvm.sh" ] && . "$(brew --prefix nvm)/nvm.sh"
-  nvm "$@"
-}
-
-nvm() { _lazy_nvm "$@"; }
-node() { _lazy_nvm node "$@"; }
-npm()  { _lazy_nvm npm  "$@"; }
-npx()  { _lazy_nvm npx  "$@"; }
+# Work-related tooling (azure-cli, nvm, maven and the projects that need them)
+# is optional. bootstrap.sh records the choice in $XDG_CONFIG_HOME/dotfiles/work.
+# Machines set up before that file existed are detected by their installed
+# tooling so they keep behaving as before.
+if [[ -z "${DOTFILES_WORK:-}" ]]; then
+  if [[ -r "$XDG_CONFIG_HOME/dotfiles/work" ]]; then
+    [[ "$(<"$XDG_CONFIG_HOME/dotfiles/work")" == enabled ]] && DOTFILES_WORK=1 || DOTFILES_WORK=0
+  elif [[ -d "$XDG_CONFIG_HOME/nvm" || -d "$HOME/.nvm" ]] \
+    || command -v mvn >/dev/null 2>&1 || command -v az >/dev/null 2>&1; then
+    DOTFILES_WORK=1
+  else
+    DOTFILES_WORK=0
+  fi
+fi
+export DOTFILES_WORK
 
 # Tool and shell configuration
 export ZSH="$XDG_DATA_HOME/oh-my-zsh"
@@ -50,13 +55,11 @@ if [[ -z "${TESTCONTAINERS_HOST_OVERRIDE:-}" ]] \
   unset _colima_cache _colima_sock
 fi
 
-# load NODE_AUTH_TOKEN
-[ -f "$XDG_CONFIG_HOME/github/github.env" ] && source "$XDG_CONFIG_HOME/github/github.env"
-
 fpath=($XDG_DATA_HOME/zsh/completions $fpath)
 
 ZSH_THEME="powerlevel10k/powerlevel10k"
-plugins=(sudo git docker z brew docker-compose gh kubectl mvn zsh-autosuggestions)
+plugins=(sudo git docker z brew docker-compose gh kubectl zsh-autosuggestions)
+(( DOTFILES_WORK )) && plugins+=(mvn)
 
 source "$ZSH/oh-my-zsh.sh"
 
@@ -73,8 +76,6 @@ alias gu="git push"
 
 # Tooling shortcuts
 alias ls="eza"
-alias npmi="npm install"
-alias playwright-local-ui="npx playwright test --project local --ui"
 alias kk="k9s"
 
 # Global shell shortcuts
@@ -122,6 +123,17 @@ bindkey $'\e[1;2C' select-forward-char
 bindkey $'\e[1;4D' select-backward-word
 bindkey $'\e[1;4C' select-forward-word
 
+# Optional work-related configuration, kept out of the shared defaults.
+if (( DOTFILES_WORK )); then
+  for _work_config in "$DOTFILES_DIR/zsh/work.zsh" "$XDG_CONFIG_HOME/zsh/work.zsh"; do
+    if [[ -r "$_work_config" ]]; then
+      source "$_work_config"
+      break
+    fi
+  done
+  unset _work_config
+fi
+
 # To customize prompt, run `p10k configure` or edit ~/.config/zsh/.p10k.zsh.
 [[ ! -f "$XDG_CONFIG_HOME/zsh/.p10k.zsh" ]] || source "$XDG_CONFIG_HOME/zsh/.p10k.zsh"
 
@@ -129,24 +141,4 @@ bindkey $'\e[1;4C' select-forward-word
 # add aliases, hooks, and function overrides without forking this public file.
 [ -f "$XDG_CONFIG_HOME/zsh/private.local.zsh" ] && source "$XDG_CONFIG_HOME/zsh/private.local.zsh"
 
-# BEGIN vp-digital-abschluss-frontend-devtools
-_DEVTOOLS_PROJECT_DIR="${HOME}/Documents/vp-digital-abschluss-frontend"
-_DEVTOOLS_ACTIVATE="${HOME}/Documents/vp-digital-abschluss-frontend-devtools/activate.sh"
-
-_devtools_chpwd() {
-  if [[ "${PWD}" == "${_DEVTOOLS_PROJECT_DIR}" ||         "${PWD}" == "${_DEVTOOLS_PROJECT_DIR}/"* ]]; then
-    if [[ -z "${_DEVTOOLS_ORIGINAL_PATH:-}" && -f "${_DEVTOOLS_ACTIVATE}" ]]; then
-      source "${_DEVTOOLS_ACTIVATE}"
-    fi
-  else
-    if [[ -n "${_DEVTOOLS_ORIGINAL_PATH:-}" ]]; then
-      deactivate-devtools
-    fi
-  fi
-}
-
-autoload -U add-zsh-hook
-add-zsh-hook chpwd _devtools_chpwd
-# END vp-digital-abschluss-frontend-devtools
-
-. "$HOME/.local/share/../bin/env"
+[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
