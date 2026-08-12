@@ -67,6 +67,41 @@ from pathlib import Path
 settings_key = sys.argv[1]
 plist_path = Path(sys.argv[2])
 
+# Columns in display order, taken from a configured machine.
+# Only name, kind, size and modification date are shown.
+COLUMNS = [
+    ('name', True, True, 828),
+    ('ubiquity', False, False, 35),
+    ('dateCreated', False, False, 181),
+    ('kind', True, True, 180),
+    ('size', False, True, 97),
+    ('dateModified', False, True, 181),
+    ('label', True, False, 100),
+    ('version', True, False, 75),
+    ('comments', True, False, 300),
+    ('dateLastOpened', False, False, 200),
+    ('shareOwner', False, False, 200),
+    ('shareLastEditor', False, False, 200),
+    ('dateAdded', False, False, 181),
+    ('invitationStatus', False, False, 210),
+]
+
+# The legacy key only knows this subset of columns.
+LEGACY_COLUMNS = {
+    'name', 'dateCreated', 'kind', 'size', 'dateModified',
+    'label', 'version', 'comments', 'dateLastOpened',
+}
+
+COMMON = {
+    'calculateAllSizes': True,
+    'iconSize': 32.0,
+    'showIconPreview': True,
+    'sortColumn': 'name',
+    'textSize': 16.0,
+    'useRelativeDates': True,
+    'viewOptionsVersion': 1,
+}
+
 if plist_path.exists():
     with plist_path.open('rb') as fh:
         try:
@@ -77,14 +112,34 @@ else:
     root = {}
 
 settings = root.setdefault(settings_key, {})
-lv = settings.setdefault('ListViewSettings', {})
-lv.update({
-    'iconSize': 20,
-    'textSize': 16,
-    'showIconPreview': True,
-    'useRelativeDates': True,
-    'calculateAllSizes': False,
-})
+
+# Modern macOS reads ExtendedListViewSettingsV2, older releases read ListViewSettings.
+# Both are written so the settings apply regardless, and they must not contradict each other.
+legacy = settings.setdefault('ListViewSettings', {})
+legacy.update(COMMON)
+legacy['columns'] = {
+    identifier: {
+        'ascending': ascending,
+        'index': index,
+        'visible': visible,
+        'width': width,
+    }
+    for index, (identifier, ascending, visible, width) in enumerate(
+        column for column in COLUMNS if column[0] in LEGACY_COLUMNS
+    )
+}
+
+extended = settings.setdefault('ExtendedListViewSettingsV2', {})
+extended.update(COMMON)
+extended['columns'] = [
+    {
+        'ascending': ascending,
+        'identifier': identifier,
+        'visible': visible,
+        'width': width,
+    }
+    for identifier, ascending, visible, width in COLUMNS
+]
 
 with plist_path.open('wb') as fh:
     plistlib.dump(root, fh)
@@ -285,7 +340,8 @@ set_finder_icon_view_settings "DesktopViewSettings"
 set_finder_icon_view_settings "FK_StandardViewSettings"
 set_finder_icon_view_settings "StandardViewSettings"
 
-# Finder list view: large icons, text size 16
+# Finder list view: large icons, text size 16, all sizes calculated,
+# showing the name, kind, size and modification date columns
 set_finder_list_view_settings "FK_StandardViewSettings"
 set_finder_list_view_settings "StandardViewSettings"
 
@@ -304,6 +360,10 @@ defaults write com.apple.finder FXInfoPanesExpanded -dict \
     General -bool true \
     OpenWith -bool true \
     Privileges -bool true
+
+# Restart Finder right away. A running Finder keeps its view settings in memory and
+# writes them back to the plist later, which would silently undo the settings above.
+killall Finder > /dev/null 2>&1 || true
 
 # Next tab, previous tab in all apps
 set_tab_shortcuts NSGlobalDomain
