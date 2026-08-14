@@ -398,7 +398,9 @@ set_zsh_as_default_shell() {
     return
   fi
 
-  chsh -s "$zsh_path"
+  # Plain chsh authenticates against Open Directory and would ask for the password a
+  # second time. Running it through sudo reuses the credentials acquired at startup.
+  sudo chsh -s "$zsh_path" "$USER"
 }
 
 apply_macos_settings() {
@@ -617,10 +619,14 @@ acquire_sudo() {
     echo "Failed to obtain sudo access." >&2
     exit 1
   fi
-  # Keep sudo timestamp refreshed in background until this script exits
+  # Keep the sudo timestamp refreshed in the background until this script exits.
+  # A single failed refresh must not end the loop: this script runs with `set -e`,
+  # which the subshell inherits, so an unguarded failure would kill the keepalive.
+  # The timestamp would then expire during the long brew steps and the next sudo
+  # user (.macos) would ask for the password a second time.
   (
     while kill -0 "$$" 2>/dev/null; do
-      sudo -n true 2>/dev/null
+      sudo -n true 2>/dev/null || true
       sleep 50
     done
   ) &

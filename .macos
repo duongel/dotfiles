@@ -201,11 +201,16 @@ configure_ghostty() {
     ln -sfn "$repo_ghostty_config" "$ghostty_config"
 }
 
-# Reuse existing sudo credentials (e.g. from bootstrap.sh);
+# Reuse existing sudo credentials (e.g. from bootstrap.sh, which keeps the
+# timestamp alive in the background);
 # only prompt when running this script standalone.
 if ! sudo -n true 2>/dev/null; then
   sudo -v
-  (while kill -0 "$$" 2>/dev/null; do sudo -n true; sleep 50; done) &
+  # The redirects matter: without them this background job inherits the caller's
+  # stdout. When bootstrap.sh pipes this script into its logger, the pipe would
+  # stay open until the loop ends, making the terminal hang for up to 50 seconds
+  # after everything else finished.
+  (while kill -0 "$$" 2>/dev/null; do sudo -n true; sleep 50; done) > /dev/null 2>&1 &
 fi
 
 ###############################################################################
