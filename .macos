@@ -388,8 +388,27 @@ set_tab_shortcuts com.sublimetext.4
 # Change minimize/maximize window effect
 defaults write com.apple.dock mineffect -string "scale"
 
-# Wipe all app icons from the Dock, so it starts empty and apps can be added manually
-defaults write com.apple.dock persistent-apps -array
+# Optionally wipe all app icons from the Dock, so it starts empty and apps can be
+# added manually. Set CLEAR_DOCK=yes/no beforehand to skip the prompt.
+clear_dock="${CLEAR_DOCK:-}"
+if [ -z "$clear_dock" ]; then
+    if [ -t 0 ]; then
+        read -r -p "Wipe all app icons from the Dock? [y/N] " clear_dock
+    else
+        clear_dock="no"
+    fi
+fi
+
+case "$clear_dock" in
+    [Yy] | [Yy][Ee][Ss] | 1 | true | TRUE)
+        defaults write com.apple.dock persistent-apps -array
+        echo "Dock app icons wiped."
+        ;;
+    *)
+        echo "Keeping existing Dock app icons."
+        ;;
+esac
+unset clear_dock
 
 # Don’t animate opening applications from the Dock
 #defaults write com.apple.dock launchanim -bool false
