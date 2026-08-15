@@ -29,11 +29,15 @@ Work tooling is optional. `bootstrap.sh` asks whether it should be installed and
 Non-interactive or scripted runs:
 
 ```sh
-./bootstrap.sh --work      # install work tooling without asking
-./bootstrap.sh --no-work   # skip work tooling without asking
+./bootstrap.sh --work           # install work tooling without asking
+./bootstrap.sh --no-work        # skip work tooling without asking
+./bootstrap.sh --clear-dock     # wipe all app icons from the Dock without asking
+./bootstrap.sh --no-clear-dock  # keep the current Dock without asking
 ```
 
-Both questions can be skipped entirely, for example `./bootstrap.sh --no-work --link-zshrc`. Without a TTY, the stored or detected defaults are used.
+All questions can be skipped entirely, for example `./bootstrap.sh --no-work --link-zshrc --no-clear-dock`. Without a TTY, the stored or detected defaults are used.
+
+Running `.macos` standalone asks the Dock question itself; set `CLEAR_DOCK=yes` or `CLEAR_DOCK=no` to skip it.
 
 The choice can be changed later by re-running `bootstrap.sh`, by editing `~/.config/dotfiles/work`, or per shell with `DOTFILES_WORK=1` / `DOTFILES_WORK=0`. Re-running with `--no-work` only stops the work config from loading; already installed brew packages are not removed.
 

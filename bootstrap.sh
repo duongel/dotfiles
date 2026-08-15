@@ -8,6 +8,7 @@ LOG_FILE="$LOG_DIR/bootstrap.log"
 RESTART_APPS_AFTER_BOOTSTRAP=0
 INSTALL_WORK_TOOLS=""
 LINK_ZSH_CONFIG=""
+CLEAR_DOCK=""
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
@@ -403,8 +404,20 @@ set_zsh_as_default_shell() {
   sudo chsh -s "$zsh_path" "$USER"
 }
 
+decide_on_dock_wipe() {
+  if [[ -n "$CLEAR_DOCK" ]]; then
+    echo "Wipe Dock app icons: ${CLEAR_DOCK} (from command line)."
+    return
+  fi
+
+  CLEAR_DOCK="$(ask_yes_no "Wipe all app icons from the Dock?" "no")"
+  echo "Wipe Dock app icons: $CLEAR_DOCK."
+}
+
 apply_macos_settings() {
-  bash "$REPO_DIR/.macos"
+  # .macos must never prompt from here: its output is piped into the logger,
+  # so a prompt would be invisible and the bootstrap would appear to hang.
+  CLEAR_DOCK="$CLEAR_DOCK" bash "$REPO_DIR/.macos"
 }
 
 import_private_zsh_config() {
@@ -577,9 +590,15 @@ parse_args() {
       --no-link-zshrc)
         LINK_ZSH_CONFIG="copied"
         ;;
+      --clear-dock)
+        CLEAR_DOCK="yes"
+        ;;
+      --no-clear-dock)
+        CLEAR_DOCK="no"
+        ;;
       *)
         echo "Unknown argument: $1" >&2
-        echo "Usage: ./bootstrap.sh [--restart-apps] [--work|--no-work] [--link-zshrc|--no-link-zshrc]" >&2
+        echo "Usage: ./bootstrap.sh [--restart-apps] [--work|--no-work] [--link-zshrc|--no-link-zshrc] [--clear-dock|--no-clear-dock]" >&2
         exit 1
         ;;
     esac
@@ -594,6 +613,7 @@ main() {
 
   run_step "choosing whether to install work-related tools" decide_on_work_tools
   run_step "choosing how to install the zsh config" decide_on_zsh_config_symlinks
+  run_step "choosing whether to wipe the dock" decide_on_dock_wipe
   run_step "installing homebrew" ensure_homebrew_is_installed
   run_step "loading homebrew into the shell" load_homebrew_into_shell
   run_step "installing required brew packages" install_required_brew_packages

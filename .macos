@@ -389,11 +389,17 @@ set_tab_shortcuts com.sublimetext.4
 defaults write com.apple.dock mineffect -string "scale"
 
 # Optionally wipe all app icons from the Dock, so it starts empty and apps can be
-# added manually. Set CLEAR_DOCK=yes/no beforehand to skip the prompt.
+# added manually. Set CLEAR_DOCK=yes/no beforehand to skip the prompt;
+# bootstrap.sh always does so and asks the question itself.
 clear_dock="${CLEAR_DOCK:-}"
 if [ -z "$clear_dock" ]; then
     if [ -t 0 ]; then
-        read -r -p "Wipe all app icons from the Dock? [y/N] " clear_dock
+        # The question is printed as a complete line instead of using `read -p`.
+        # A `read -p` prompt has no trailing newline, so a caller that pipes this
+        # script into a line-based logger never shows it and the script looks
+        # like it hangs forever while waiting for input.
+        echo "Wipe all app icons from the Dock? [y/N]" >&2
+        IFS= read -r clear_dock || clear_dock="no"
     else
         clear_dock="no"
     fi
