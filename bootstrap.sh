@@ -2,7 +2,30 @@
 
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Resolves a path through all symlinks. The final component does not have to
+# exist, only its parent directory.
+resolve_path() {
+  local path="$1"
+  local dir
+
+  while [[ -L "$path" ]]; do
+    dir="$(cd -P "$(dirname "$path")" 2>/dev/null && pwd)" || return 1
+    path="$(readlink "$path")"
+    [[ "$path" != /* ]] && path="$dir/$path"
+  done
+
+  dir="$(cd -P "$(dirname "$path")" 2>/dev/null && pwd)" || return 1
+  printf '%s\n' "${dir%/}/$(basename "$path")"
+}
+
+# Resolved through symlinks so a symlinked bootstrap.sh still finds the checkout.
+REPO_DIR="$(dirname "$(resolve_path "${BASH_SOURCE[0]}")")"
+
+if [[ ! -f "$REPO_DIR/bootstrap.sh" || ! -f "$REPO_DIR/.macos" ]]; then
+  echo "Cannot locate the dotfiles repository (guessed: $REPO_DIR)." >&2
+  echo "Run ./bootstrap.sh from its checkout instead of piping it into bash." >&2
+  exit 1
+fi
 LOG_DIR="$REPO_DIR/logs"
 LOG_FILE="$LOG_DIR/bootstrap.log"
 RESTART_APPS_AFTER_BOOTSTRAP=0
@@ -78,8 +101,18 @@ symlink_repo_file() {
   target_dir="$(dirname "$target_path")"
   mkdir -p "$target_dir"
 
-  if [[ -L "$target_path" && "$(readlink "$target_path")" == "$source_path" ]]; then
-    return
+  if [[ -L "$target_path" ]]; then
+    # Already pointing at the same file, even if the link path is spelled
+    # differently: refresh it instead of creating another .bak file.
+    if [[ "$(resolve_path "$target_path")" == "$(resolve_path "$source_path")" ]]; then
+      ln -sfn "$source_path" "$target_path"
+      return
+    fi
+
+    # A dangling symlink has no content worth backing up.
+    if [[ ! -e "$target_path" ]]; then
+      rm "$target_path"
+    fi
   fi
 
   if [[ -e "$target_path" || -L "$target_path" ]]; then

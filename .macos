@@ -1,6 +1,30 @@
 #!/usr/bin/env bash
 
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Resolves a path through all symlinks. The final component does not have to
+# exist, only its parent directory.
+resolve_path() {
+    local path="$1"
+    local dir
+
+    while [[ -L "$path" ]]; do
+        dir="$(cd -P "$(dirname "$path")" 2>/dev/null && pwd)" || return 1
+        path="$(readlink "$path")"
+        [[ "$path" != /* ]] && path="$dir/$path"
+    done
+
+    dir="$(cd -P "$(dirname "$path")" 2>/dev/null && pwd)" || return 1
+    printf '%s\n' "${dir%/}/$(basename "$path")"
+}
+
+# ~/.macos is a symlink into this repository, so the script directory has to be
+# resolved through symlinks; otherwise DOTFILES_DIR would become $HOME.
+DOTFILES_DIR="$(dirname "$(resolve_path "${BASH_SOURCE[0]}")")"
+
+if [[ ! -f "$DOTFILES_DIR/config.ghostty" || ! -f "$DOTFILES_DIR/.macos" ]]; then
+    echo "Cannot locate the dotfiles repository (guessed: $DOTFILES_DIR)." >&2
+    echo "Run this script from its checkout, e.g. ./.macos in the repository." >&2
+    exit 1
+fi
 
 set_tab_shortcuts() {
     local domain="$1"
@@ -188,14 +212,26 @@ configure_ghostty() {
 
     mkdir -p "$ghostty_config_dir"
 
-    if [[ -e "$ghostty_config" || -L "$ghostty_config" ]]; then
-        if [[ "$(readlink "$ghostty_config" 2>/dev/null || true)" != "$repo_ghostty_config" ]]; then
-            backup_path="$ghostty_config.backup-before-dotfiles-symlink"
-            if [[ -e "$backup_path" || -L "$backup_path" ]]; then
-                backup_path="$backup_path.$(date +%Y%m%d%H%M%S)"
-            fi
-            mv "$ghostty_config" "$backup_path"
+    if [[ -L "$ghostty_config" ]]; then
+        # Already managed by these dotfiles (possibly through a differently
+        # spelled path): refresh the link instead of creating another backup.
+        if [[ "$(resolve_path "$ghostty_config")" == "$(resolve_path "$repo_ghostty_config")" ]]; then
+            ln -sfn "$repo_ghostty_config" "$ghostty_config"
+            return
         fi
+
+        # A dangling symlink has no content worth preserving.
+        if [[ ! -e "$ghostty_config" ]]; then
+            rm "$ghostty_config"
+        fi
+    fi
+
+    if [[ -e "$ghostty_config" || -L "$ghostty_config" ]]; then
+        backup_path="$ghostty_config.backup-before-dotfiles-symlink"
+        if [[ -e "$backup_path" || -L "$backup_path" ]]; then
+            backup_path="$backup_path.$(date +%Y%m%d%H%M%S)"
+        fi
+        mv "$ghostty_config" "$backup_path"
     fi
 
     ln -sfn "$repo_ghostty_config" "$ghostty_config"

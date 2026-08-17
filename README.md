@@ -53,6 +53,8 @@ The other directories under `init/` (Sublime Text, terminal profiles) are still 
 
 `bootstrap.sh` is idempotent: with the same answers a second run changes nothing. Brew bundles are checked before installing, clones and symlinks are skipped when already correct (no new `.bak` files), the login shell is only changed when it actually differs, and an existing `~/.config/zsh/private.local.zsh` is never overwritten. `.macos` re-applies its `defaults` settings on every run, which converges to the same state. Only changing an answer causes work: switching from `linked` to `copied` (or back) replaces the file and backs the previous one up.
 
+Symlinks that already point at the repository file are only refreshed, never backed up, even if the link path is spelled differently, and dangling symlinks are replaced instead of being backed up. `bootstrap.sh` and `.macos` resolve their own location through symlinks, so running `~/.macos` (the symlink created by `bootstrap.sh`) targets the repository and not `$HOME`. Piping either script into `bash` is rejected because the repository location cannot be determined that way.
+
 In `copied` mode a re-run does **not** refresh an existing `~/.config/zsh/.zshrc`; it is reported instead so local modifications survive. Delete the copy first if you want the repository version back.
 
 ## Private overrides
